@@ -1,5 +1,6 @@
 const catchAsyncError = require("../../middleware/catchAsyncError");
 const User = require("./user.model");
+const Post = require("../Posts/posts.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -27,7 +28,7 @@ exports.registerUser = catchAsyncError(async (req, res) => {
         user
           .save()
           .then((user) => {
-            res.status(201).json({ message: "User saved successfully" });
+            return res.status(201).json({ message: "User saved successfully" });
           })
           .catch((err) => {
             console.log(err);
@@ -58,7 +59,7 @@ exports.loginUser = catchAsyncError(async (req, res) => {
             { _id: savedUser._id },
             process.env.JWT_SECRET
           );
-          res.status(200).json({ token });
+          return res.status(200).json({ token });
 
           //   return res.status(200).json({ message: "Successfully Logged In" });
         } else {
@@ -69,4 +70,21 @@ exports.loginUser = catchAsyncError(async (req, res) => {
         console.log(err);
       });
   });
+});
+
+exports.getUserById = catchAsyncError(async (req, res) => {
+  User.findOne({ _id: req.params.id })
+    .select("-password")
+    .then((user) => {
+      Post.find({ postedBy: req.params.id })
+        .populate("postedBy", "id name email")
+        .then((posts) => {
+          return res.status(200).json({ data: posts });
+        }).catch((err)=>{
+          console.log(err)
+        });
+    })
+    .catch((err) => {
+      return res.status(404).json({ message: "User not found" });
+    });
 });

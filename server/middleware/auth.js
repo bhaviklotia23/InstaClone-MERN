@@ -18,7 +18,7 @@ exports.isAuthenticateUser = (req, res, next) => {
     const { _id } = payload;
     User.findById(_id).then((userDetails) => {
       req.user = userDetails;
+      next();
     });
-    next();
   });
 };
